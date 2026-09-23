@@ -1,0 +1,103 @@
+export const DEFAULT_FARMER = {
+  id: "MP-SEH-2024-8849",
+  name: "Rajesh Kumar Patel",
+  hindiName: "राजेश कुमार पटेल",
+  fatherName: "Rameshwar Patel",
+  mobile: "9876543210",
+  aadhaar: "XXXX-XXXX-8849",
+  gender: "Male",
+  age: 42,
+  socialCategory: "OBC",
+  state: "Madhya Pradesh",
+  district: "Sehore",
+  tehsil: "Ashta",
+  village: "Bhairunda",
+  pinCode: "466116",
+  landholdingAcres: 4.5,
+  irrigatedAcres: 3.0,
+  ownershipType: "Self Owned (Individual Khatauni)",
+  khatauniNumber: "KH-781/24",
+  annualIncome: 140000,
+  bankName: "State Bank of India",
+  accountNumber: "XXXXXXXX4920",
+  ifscCode: "SBIN0001234",
+  aadhaarSeeded: true,
+  isBPL: false,
+  rationCardNo: "MP-BPL-883910",
+  primaryCropsKharif: ["Soybean", "Maize"],
+  primaryCropsRabi: ["Wheat", "Gram (Chana)"],
+  irrigationSource: "Borewell & Canal",
+  farmEquipment: ["Cultivator", "Trolley"],
+  livestockCount: { cows: 3, buffaloes: 2, poultry: 0 },
+  existingBenefits: {
+    pmKisan: true,
+    pmfby: true,
+    kcc: true,
+    solarPump: false
+  },
+  completionPercentage: 100,
+  lastUpdated: "2024-10-18"
+};
+
+export const SAMPLE_VLE_FARMERS = [
+  {
+    id: "MP-SEH-2024-8849",
+    name: "Rajesh Kumar Patel",
+    village: "Bhairunda",
+    mobile: "9876543210",
+    landholdingAcres: 4.5,
+    status: "Optimized",
+    optimizedBenefit: 234500,
+    missingDocs: 0,
+    applicationsActive: 4,
+    draftProgress: 100
+  },
+  {
+    id: "MP-SEH-2024-9102",
+    name: "Shivcharan Verma",
+    village: "Kothri",
+    mobile: "9823145678",
+    landholdingAcres: 2.2,
+    status: "Draft",
+    optimizedBenefit: 136000,
+    missingDocs: 2,
+    applicationsActive: 1,
+    draftProgress: 65
+  },
+  {
+    id: "MP-SEH-2024-7731",
+    name: "Sunita Bai Meena",
+    village: "Ichhawar",
+    mobile: "9711223344",
+    landholdingAcres: 6.0,
+    status: "Action Required",
+    optimizedBenefit: 280000,
+    missingDocs: 1,
+    applicationsActive: 3,
+    draftProgress: 80
+  },
+  {
+    id: "MP-SEH-2024-4412",
+    name: "Devendra Singh Rajput",
+    village: "Bilkisganj",
+    mobile: "9425098765",
+    landholdingAcres: 8.5,
+    status: "Approved",
+    optimizedBenefit: 310000,
+    missingDocs: 0,
+    applicationsActive: 5,
+    draftProgress: 100
+  },
+  {
+    id: "MP-SEH-2024-1189",
+    name: "Mangilal Chouhan",
+    village: "Shyampur",
+    mobile: "9131445566",
+    landholdingAcres: 1.8,
+    status: "Submitted",
+    optimizedBenefit: 112000,
+    missingDocs: 0,
+    applicationsActive: 2,
+    draftProgress: 100
+  }
+];

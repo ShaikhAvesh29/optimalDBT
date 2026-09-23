@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  body {
+    @apply bg-slate-100 text-slate-800 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    overscroll-behavior-y: none;
+  }
+}
+
+@layer components {
+  /* Mobile primary button with tactile press feedback */
+  .btn-gov-primary {
+    @apply inline-flex items-center justify-center px-4 py-3 rounded-xl bg-emerald-800 text-white font-bold shadow-md hover:bg-emerald-900 active:scale-[0.98] active:bg-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-700 transition-all duration-100 disabled:opacity-50 disabled:cursor-not-allowed select-none;
+  }
+
+  .btn-gov-secondary {
+    @apply inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 font-semibold shadow-sm hover:bg-slate-50 active:scale-[0.98] active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all duration-100 disabled:opacity-50 select-none;
+  }
+
+  .btn-gov-accent {
+    @apply inline-flex items-center justify-center px-4 py-3 rounded-xl bg-amber-500 text-slate-950 font-extrabold shadow-md hover:bg-amber-600 active:scale-[0.98] active:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-100 select-none;
+  }
+
+  .card-gov {
+    @apply bg-white rounded-2xl border border-slate-200/80 shadow-gov active:border-emerald-600/50 transition-all duration-150;
+  }
+
+  .card-gov-highlight {
+    @apply bg-white rounded-2xl border-2 border-emerald-600 shadow-gov-md;
+  }
+
+  .badge-gov-green {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200;
+  }
+
+  .badge-gov-amber {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200;
+  }
+
+  .badge-gov-blue {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200;
+  }
+
+  .badge-gov-red {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-800 border border-red-200;
+  }
+
+  .badge-gov-slate {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200;
+  }
+
+  .input-gov {
+    @apply w-full rounded-xl border border-slate-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600 text-sm py-3 px-3.5 transition-colors duration-150;
+  }
+}
+
+@layer utilities {
+  /* Hide default scrollbars for mobile horizontal rails */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Safe area insets for notched iPhones and Android nav bars */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* Bottom Sheet & Mobile Drawer Animations */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+@keyframes pulseSlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Print styles for downloading/printing optimization report */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  header, footer, .no-print, button, nav, #mobile-bottom-nav {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .card-gov, .card-gov-highlight {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    break-inside: avoid;
+  }
+}

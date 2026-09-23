@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <!-- Stylized Ashok Chakra & Lion Emblem Representation -->
+  <g fill="#0F5132">
+    <!-- Base Pedestal -->
+    <rect x="40" y="190" width="120" height="14" rx="3" fill="#0F5132"/>
+    <rect x="25" y="208" width="150" height="12" rx="2" fill="#D97706"/>
+    <text x="100" y="232" font-family="'Noto Sans Devanagari', sans-serif" font-size="11" font-weight="700" fill="#0F5132" text-anchor="middle">सत्यमेव जयते</text>
+    
+    <!-- Dharma Chakra in center -->
+    <circle cx="100" cy="175" r="14" stroke="#0F5132" stroke-width="2.5" fill="#FEF3C7"/>
+    <circle cx="100" cy="175" r="3" fill="#0F5132"/>
+    <line x1="100" y1="161" x2="100" y2="189" stroke="#0F5132" stroke-width="1.5"/>
+    <line x1="86" y1="175" x2="114" y2="175" stroke="#0F5132" stroke-width="1.5"/>
+    <line x1="90" y1="165" x2="110" y2="185" stroke="#0F5132" stroke-width="1.5"/>
+    <line x1="90" y1="185" x2="110" y2="165" stroke="#0F5132" stroke-width="1.5"/>
+    
+    <!-- Left Horse & Right Bull symbols -->
+    <path d="M52 170 C56 166 64 168 68 178 L52 178 Z" fill="#0F5132"/>
+    <path d="M148 170 C144 166 136 168 132 178 L148 178 Z" fill="#0F5132"/>
+
+    <!-- Lion Capital Central Profile -->
+    <path d="M85 70 C85 45 95 30 100 30 C105 30 115 45 115 70 C125 75 130 90 128 115 C125 140 115 155 100 158 C85 155 75 140 72 115 C70 90 75 75 85 70 Z" fill="#0F5132"/>
+    <!-- Left Lion Profile -->
+    <path d="M60 80 C50 85 48 100 52 120 C56 135 68 145 76 150 C74 130 72 105 76 90 C70 85 64 82 60 80 Z" fill="#14532D"/>
+    <!-- Right Lion Profile -->
+    <path d="M140 80 C150 85 152 100 148 120 C144 135 132 145 124 150 C126 130 128 105 124 90 C130 85 136 82 140 80 Z" fill="#14532D"/>
+    
+    <!-- Mane details -->
+    <circle cx="100" cy="55" r="8" fill="#D97706" opacity="0.8"/>
+    <path d="M92 85 C92 78 108 78 108 85 C108 95 92 95 92 85 Z" fill="#FEF3C7"/>
+    <circle cx="95" cy="75" r="2.5" fill="#FFFFFF"/>
+    <circle cx="105" cy="75" r="2.5" fill="#FFFFFF"/>
+  </g>
+</svg>
