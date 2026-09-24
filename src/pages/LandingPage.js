@@ -18,7 +18,7 @@ export function renderLandingPage() {
         <div class="space-y-3 relative z-10">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-[11px] text-emerald-200 font-medium">Namaste, Farmer 🙏</p>
+              <p class="text-[11px] text-emerald-200 font-medium">Hello, Farmer 🙏</p>
               <h1 class="text-xl font-black text-white tracking-tight">${profile.name}</h1>
             </div>
             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950 shadow-xs">

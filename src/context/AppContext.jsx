@@ -4,6 +4,15 @@ import { SCHEMES } from '../data/schemes.js';
 import { deduplicateDocuments } from '../logic/deduplication.js';
 import { runOptimizationEngine } from '../logic/optimizer.js';
 
+// ─── MOCK AUTHENTICATED FIELD AGENT SESSION ───────────────────────────────────
+// For demo purposes the portal assumes the field agent is already authenticated.
+// This bypasses the SignUpPage / OTP flow entirely.
+const MOCK_AUTH = {
+  isAuthenticated: true,
+  agentId: 'VLE-MP-SEH-001',
+  agentName: 'Field Agent Portal'
+};
+
 const AppContext = createContext();
 
 const STORAGE_KEYS = {
@@ -16,6 +25,8 @@ const STORAGE_KEYS = {
 };
 
 export function AppProvider({ children }) {
+  // Always authenticated — field agent is pre-logged in for demo
+  const [auth] = useState(MOCK_AUTH);
   // 1. Farmer Profile
   const [profile, setProfile] = useState(() => {
     try {
@@ -224,6 +235,7 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider
       value={{
+        auth,
         profile,
         updateProfile,
         draft,

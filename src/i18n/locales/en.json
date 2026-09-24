@@ -23,7 +23,7 @@
     "vlePanel": "VLE Console"
   },
   "home": {
-    "greeting": "Namaste, Farmer 🙏",
+    "greeting": "Hello, Farmer 🙏",
     "welcome": "Welcome back",
     "totalDbtPotential": "Total DBT Potential",
     "perYear": "/ year",
@@ -344,7 +344,7 @@
   "chat": {
     "title": "OptimalDBT Chat",
     "subtitle": "Multilingual AI Scheme Assistant",
-    "welcomeTitle": "Namaste! How can I help you today?",
+    "welcomeTitle": "Hello! How can I help you today?",
     "welcomeSubtitle": "Ask me about government schemes, eligibility, required documents, or application status.",
     "placeholder": "Ask about schemes, eligibility, documents...",
     "sendAria": "Send message",

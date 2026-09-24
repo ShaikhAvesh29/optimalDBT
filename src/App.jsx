@@ -15,7 +15,7 @@ import { DraftsPage } from './pages/DraftsPage.jsx';
 import { VLEControlPage } from './pages/VLEControlPage.jsx';
 import { HelpPage } from './pages/HelpPage.jsx';
 import { ChatPage } from './pages/ChatPage.jsx';
-import { SignUpPage } from './pages/SignUpPage.jsx';
+// SignUpPage intentionally removed — auth is pre-mocked (field agent already authenticated)
 
 export function App() {
   return (
@@ -28,7 +28,8 @@ export function App() {
         <Route path="/results" element={<ResultsPage />} />
         <Route path="/roadmap" element={<RoadmapPage />} />
         <Route path="/schemes" element={<SchemesPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
+        {/* /signup is bypassed — field agent is already authenticated for demo */}
+        <Route path="/signup" element={<Navigate to="/home" replace />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/applications" element={<ApplicationsPage />} />
         <Route path="/documents" element={<DocumentsPage />} />

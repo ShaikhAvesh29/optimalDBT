@@ -3,35 +3,117 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext.jsx';
 import { SCHEMES } from '../data/schemes.js';
-import { Sparkles, ArrowRight, ShieldCheck, FileCheck, Zap, AlertCircle } from 'lucide-react';
+import { Sparkles, ArrowRight, ShieldCheck, FileCheck, Zap, AlertCircle, Bot, CheckCircle2, Loader2, TrendingUp, Activity } from 'lucide-react';
 import { getAppLanguage } from '../i18n/index.js';
+
+const API_BASE = 'http://127.0.0.1:8000';
 
 export function HomePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { profile, updateProfile, setSchemeModalData, optimization } = useApp();
+  const { profile, updateProfile, setSchemeModalData, optimization, triggerToast } = useApp();
   const isHindi = getAppLanguage() === 'hi';
 
   const [quickMobile, setQuickMobile] = useState(profile.mobile || '');
   const [quickState, setQuickState] = useState(profile.state || 'Madhya Pradesh');
   const [quickLand, setQuickLand] = useState(profile.landholdingAcres || 4.5);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizeResult, setOptimizeResult] = useState(null);
+
+  // ML Forecast widget state
+  const [mlForecast, setMlForecast] = useState(null);
+  const [isForecastLoading, setIsForecastLoading] = useState(false);
+  const [forecastError, setForecastError] = useState(null);
+
+  const handleMLForecast = async () => {
+    setIsForecastLoading(true);
+    setForecastError(null);
+    setMlForecast(null);
+    try {
+      const res = await fetch(`${API_BASE}/predict-future-income`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          land_acres: profile.landholdingAcres || 4.5,
+          cattle: profile.cattle || 3,
+          soil_quality: profile.soilQuality || 7,
+          current_income: profile.annualIncome || 140000
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMlForecast(data);
+        triggerToast('🤖 ML Forecast complete — income trajectory computed!', 'success');
+      } else {
+        setForecastError('ML engine returned an error. Try again.');
+      }
+    } catch {
+      setForecastError('Backend offline. Start the ML server at port 8000.');
+    } finally {
+      setIsForecastLoading(false);
+    }
+  };
 
   const topRecommended = SCHEMES.filter(s => s.isRecommended).slice(0, 4);
 
-  const handleQuickSubmit = (e) => {
+  // ─── POST /optimize – wired to the Discover DBT Schemes button ───────────────
+  const handleQuickSubmit = async (e) => {
     e.preventDefault();
     updateProfile({
       mobile: quickMobile,
       state: quickState,
       landholdingAcres: parseFloat(quickLand) || 4.5
     });
-    navigate('/eligibility');
+
+    setIsOptimizing(true);
+    setOptimizeResult(null);
+
+    try {
+      const res = await fetch(`${API_BASE}/optimize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: profile.name,
+          annual_income: profile.annualIncome || 140000
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setOptimizeResult(data);
+        const benefit = data.total_benefit_inr
+          ? `₹${Number(data.total_benefit_inr).toLocaleString('en-IN')}`
+          : 'optimized portfolio';
+        triggerToast(`⚡ AI Engine: ${benefit} optimal portfolio computed!`, 'success');
+        setTimeout(() => navigate('/results'), 800);
+      } else {
+        triggerToast('AI Engine returned an error — using local optimizer', 'warning');
+        setTimeout(() => navigate('/eligibility'), 400);
+      }
+    } catch {
+      // Backend offline — fall back to local optimizer gracefully
+      triggerToast('Backend offline — running local optimization engine', 'info');
+      setTimeout(() => navigate('/eligibility'), 400);
+    } finally {
+      setIsOptimizing(false);
+    }
   };
 
   return (
     <div className="space-y-4 pb-6 animate-fade-in">
-      
-      {/* Farmer Greeting Banner */}
+
+      {/* ── DEMO AUTH BANNER: Field Agent Pre-Authenticated ── */}
+      <div className="mx-4 mt-2 bg-gradient-to-r from-slate-900 to-emerald-950 text-white px-4 py-2.5 rounded-2xl flex items-center justify-between shadow-lg border border-emerald-800/40">
+        <div className="flex items-center space-x-2">
+          <Bot className="w-4 h-4 text-amber-400 shrink-0" />
+          <div>
+            <p className="text-[10px] font-black text-amber-300 uppercase tracking-wider">Field Agent Portal • Pre-Authenticated</p>
+            <p className="text-[11px] text-emerald-200">Assuming field agent is already authenticated into the portal</p>
+          </div>
+        </div>
+        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+      </div>
+
       <section className="bg-gradient-to-b from-emerald-950 via-emerald-900 to-gov-emerald text-white px-4 pt-4 pb-6 rounded-b-3xl shadow-lg relative overflow-hidden">
         <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-amber-400/10 pointer-events-none blur-xl"></div>
         
@@ -130,6 +212,82 @@ export function HomePage() {
               {t('home.trackClaim')}
             </span>
           </Link>
+        </div>
+      </section>
+
+      {/* ── ML FORECAST WIDGET ─────────────────────────────────────── */}
+      <section className="px-4">
+        <div className="card-gov p-4 bg-gradient-to-br from-slate-900 to-emerald-950 border border-emerald-700/40 shadow-lg space-y-3 rounded-2xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-amber-400/20 flex items-center justify-center">
+                <Activity className="w-4 h-4 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-[10px] font-extrabold text-amber-300 uppercase tracking-wider">ML Engine • Live</p>
+                <p className="text-xs font-black text-white">Income Trajectory Forecast</p>
+              </div>
+            </div>
+            <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-[9px] font-bold text-emerald-300">Random Forest</span>
+            </span>
+          </div>
+
+          {/* Input summary */}
+          <div className="grid grid-cols-4 gap-1.5">
+            {[
+              { label: 'Land', value: `${profile.landholdingAcres || 4.5} ac` },
+              { label: 'Cattle', value: profile.cattle || 3 },
+              { label: 'Soil', value: `${profile.soilQuality || 7}/10` },
+              { label: 'Income', value: `₹${((profile.annualIncome || 140000)/1000).toFixed(0)}K` }
+            ].map(item => (
+              <div key={item.label} className="bg-white/10 rounded-lg p-1.5 text-center">
+                <p className="text-[9px] text-emerald-300 font-semibold">{item.label}</p>
+                <p className="text-[11px] font-black text-white">{item.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Result panel */}
+          {mlForecast && (
+            <div className="bg-white/10 rounded-xl p-3 space-y-2 border border-white/10">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] text-emerald-300 font-bold uppercase">Forecasted Next Year</p>
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <p className="text-xl font-black text-white">
+                ₹{Number(mlForecast.forecasted_income_next_year).toLocaleString('en-IN')}
+              </p>
+              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                mlForecast.predictive_routing_flag.startsWith('HIGH')
+                  ? 'bg-red-500/20 text-red-300 border border-red-500/30'
+                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+              }`}>
+                {mlForecast.predictive_routing_flag.startsWith('HIGH') ? '⚠️' : '✅'}{' '}
+                {mlForecast.predictive_routing_flag}
+              </div>
+            </div>
+          )}
+
+          {forecastError && (
+            <p className="text-[11px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              ⚠️ {forecastError}
+            </p>
+          )}
+
+          <button
+            id="ml-forecast-btn"
+            onClick={handleMLForecast}
+            disabled={isForecastLoading}
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-amber-400 hover:bg-amber-300 active:scale-95 transition-all rounded-xl text-slate-950 font-black text-xs shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isForecastLoading ? (
+              <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Running ML Engine...</span></>
+            ) : (
+              <><Sparkles className="w-3.5 h-3.5" /><span>{mlForecast ? 'Re-run Forecast' : 'Run ML Forecast →'}</span></>
+            )}
+          </button>
         </div>
       </section>
 
@@ -267,8 +425,19 @@ export function HomePage() {
               </div>
             </div>
 
-            <button type="submit" className="w-full btn-gov-primary text-xs py-2.5 font-extrabold bg-emerald-800 hover:bg-emerald-900 shadow-sm mt-1">
-              {t('home.discoverBtn')} →
+            <button
+              type="submit"
+              disabled={isOptimizing}
+              className="w-full btn-gov-primary text-xs py-2.5 font-extrabold bg-emerald-800 hover:bg-emerald-900 shadow-sm mt-1 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+            >
+              {isOptimizing ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>AI Engine Optimizing...</span>
+                </>
+              ) : (
+                <span>{t('home.discoverBtn')} →</span>
+              )}
             </button>
           </form>
         </div>

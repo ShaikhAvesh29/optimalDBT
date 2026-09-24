@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext.jsx';
 import { getAppLanguage } from '../i18n/index.js';
 import { generateChatbotResponse, SPEECH_LANG_MAP } from '../logic/chatbotEngine.js';
+
+const API_BASE = 'http://127.0.0.1:8000';
 import {
   ArrowLeft,
   Send,
@@ -48,6 +50,8 @@ export function ChatPage() {
   const [speechError, setSpeechError] = useState(null);
   const [currentlySpeakingId, setCurrentlySpeakingId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [aiBackendActive, setAiBackendActive] = useState(false);
+  const [lastAiSource, setLastAiSource] = useState(null); // 'backend' | 'local'
 
   // Speech recognition reference
   const recognitionRef = useRef(null);
@@ -55,7 +59,7 @@ export function ChatPage() {
   // Initial welcome message
   const getInitialMessages = () => {
     const welcome = generateChatbotResponse({
-      query: 'namaste hello',
+      query: 'hello',
       language: currentLang,
       profile,
       optimization,
@@ -81,7 +85,7 @@ export function ChatPage() {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch {}
+    } catch { }
     return getInitialMessages();
   });
 
@@ -89,7 +93,7 @@ export function ChatPage() {
   useEffect(() => {
     try {
       sessionStorage.setItem('optimaldbt_chat_history', JSON.stringify(messages));
-    } catch {}
+    } catch { }
   }, [messages]);
 
   // Auto-scroll to bottom when messages update or typing
@@ -144,7 +148,7 @@ export function ChatPage() {
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
-        } catch {}
+        } catch { }
       }
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
@@ -163,7 +167,7 @@ export function ChatPage() {
     if (isListening) {
       try {
         recognitionRef.current.stop();
-      } catch {}
+      } catch { }
       setIsListening(false);
     } else {
       setSpeechError(null);
@@ -227,15 +231,15 @@ export function ChatPage() {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Handle Message Submission
-  const handleSendMessage = (textToSend = inputQuery) => {
+  // Handle Message Submission — wired to POST /voice-assistant for mic-triggered queries
+  const handleSendMessage = async (textToSend = inputQuery, fromMic = false) => {
     const query = (textToSend || '').trim();
     if (!query || isTyping) return;
 
     if (isListening && recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch {}
+      } catch { }
       setIsListening(false);
     }
 
@@ -251,9 +255,39 @@ export function ChatPage() {
     setSpeechError(null);
     setIsTyping(true);
 
-    // Natural assistant thinking delay (350ms)
-    setTimeout(() => {
-      const responseText = generateChatbotResponse({
+    // ─── Try POST /voice-assistant (backend AI) first — mic queries get Gemini response
+    let responseText = null;
+    const isMicQuery = fromMic || isListening;
+
+    if (isMicQuery || true) { // always try backend first for demo
+      try {
+        const res = await fetch(`${API_BASE}/voice-assistant`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query,
+            farmer_name: profile.name,
+            land_acres: profile.landholdingAcres || 4.5,
+            state: profile.state || 'Madhya Pradesh',
+            annual_income: profile.annualIncome || 140000,
+            language: currentLang
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          responseText = data.ai_response;
+          setAiBackendActive(true);
+          setLastAiSource('backend');
+        }
+      } catch {
+        // Backend offline — fall through to local engine
+        setLastAiSource('local');
+      }
+    }
+
+    // Fallback: local chatbot engine
+    if (!responseText) {
+      responseText = generateChatbotResponse({
         query,
         language: currentLang,
         profile,
@@ -262,7 +296,11 @@ export function ChatPage() {
         documents,
         checklist
       });
+      setLastAiSource('local');
+    }
 
+    // Natural assistant thinking delay
+    setTimeout(() => {
       const assistantMessage = {
         id: `assistant-${Date.now()}`,
         sender: 'assistant',
@@ -272,7 +310,7 @@ export function ChatPage() {
 
       setMessages(prev => [...prev, assistantMessage]);
       setIsTyping(false);
-    }, 400);
+    }, 350);
   };
 
   const handleKeyDown = (e) => {
@@ -312,7 +350,7 @@ export function ChatPage() {
 
   return (
     <div className="flex flex-col h-[calc(100dvh-4.5rem)] bg-slate-50 relative overflow-hidden">
-      
+
       {/* Header */}
       <header className="bg-white border-b border-slate-200/90 px-3 py-2.5 flex items-center justify-between sticky top-0 z-20 shadow-xs">
         <div className="flex items-center space-x-2.5 min-w-0">
@@ -323,7 +361,7 @@ export function ChatPage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          
+
           <div className="relative">
             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-900 via-emerald-800 to-amber-500 text-white flex items-center justify-center shadow-xs">
               <Sparkles className="w-4 h-4 text-amber-300" />
@@ -334,9 +372,13 @@ export function ChatPage() {
           <div className="min-w-0">
             <div className="flex items-center space-x-1.5">
               <h1 className="text-sm font-black text-slate-900 truncate">
-                {t('chat.title') || 'OptimalDBT Chat'}
+                {t('chat.title') || 'OptimalDBT AI Assistant'}
               </h1>
-              <span className="badge-gov-green text-[9px] py-0 px-1.5">AI</span>
+              {lastAiSource === 'backend' ? (
+                <span className="badge-gov-green text-[9px] py-0 px-1.5 animate-pulse">Gemini ✓</span>
+              ) : (
+                <span className="badge-gov-green text-[9px] py-0 px-1.5">AI</span>
+              )}
             </div>
             <p className="text-[10px] text-slate-500 truncate">
               {profile?.name} • {profile?.landholdingAcres || 4.5} Acres
@@ -405,7 +447,7 @@ export function ChatPage() {
 
       {/* Messages Scroll Area */}
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3.5 no-scrollbar">
-        
+
         {/* Context Banner */}
         <div className="bg-emerald-900/5 border border-emerald-800/15 rounded-2xl p-2.5 flex items-center justify-between text-emerald-950">
           <div className="flex items-center space-x-2 min-w-0">
@@ -440,9 +482,8 @@ export function ChatPage() {
           return (
             <div
               key={msg.id}
-              className={`flex items-start gap-2 animate-fade-in ${
-                isAssistant ? 'justify-start' : 'justify-end'
-              }`}
+              className={`flex items-start gap-2 animate-fade-in ${isAssistant ? 'justify-start' : 'justify-end'
+                }`}
             >
               {isAssistant && (
                 <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-emerald-900 to-amber-500 text-white flex items-center justify-center shrink-0 mt-1 shadow-xs">
@@ -451,11 +492,10 @@ export function ChatPage() {
               )}
 
               <div
-                className={`max-w-[86%] sm:max-w-[80%] rounded-2xl p-3.5 text-xs sm:text-sm leading-relaxed shadow-xs space-y-2 ${
-                  isAssistant
+                className={`max-w-[86%] sm:max-w-[80%] rounded-2xl p-3.5 text-xs sm:text-sm leading-relaxed shadow-xs space-y-2 ${isAssistant
                     ? 'bg-white text-slate-800 border border-slate-200/90 rounded-tl-sm'
                     : 'bg-emerald-800 text-white rounded-tr-sm shadow-emerald-900/10'
-                }`}
+                  }`}
               >
                 {/* Text Content */}
                 <div className="whitespace-pre-line break-words font-medium">
@@ -464,11 +504,10 @@ export function ChatPage() {
 
                 {/* Footer bar with timestamp & actions */}
                 <div
-                  className={`flex items-center justify-between pt-1 border-t text-[10px] ${
-                    isAssistant
+                  className={`flex items-center justify-between pt-1 border-t text-[10px] ${isAssistant
                       ? 'border-slate-100 text-slate-400'
                       : 'border-emerald-700/60 text-emerald-200'
-                  }`}
+                    }`}
                 >
                   <span>{msg.timestamp}</span>
 
@@ -478,11 +517,10 @@ export function ChatPage() {
                         {/* Text-to-speech speaker button */}
                         <button
                           onClick={() => toggleSpeak(msg.id, msg.text)}
-                          className={`p-1 rounded-md transition-all active:scale-90 ${
-                            isSpeaking
+                          className={`p-1 rounded-md transition-all active:scale-90 ${isSpeaking
                               ? 'bg-amber-100 text-amber-900 ring-1 ring-amber-400 font-bold'
                               : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'
-                          }`}
+                            }`}
                           aria-label={
                             isSpeaking
                               ? t('chat.speakerStopAria') || 'Stop speech'
@@ -582,11 +620,10 @@ export function ChatPage() {
             onClick={toggleListening}
             aria-label={isListening ? t('chat.micStop') || 'Stop microphone' : t('chat.micStart') || 'Voice input'}
             title={isListening ? t('chat.micStop') || 'Stop microphone' : t('chat.micStart') || 'Voice input'}
-            className={`p-3 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-150 active:scale-90 ${
-              isListening
+            className={`p-3 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-150 active:scale-90 ${isListening
                 ? 'bg-red-600 text-white shadow-md ring-4 ring-red-200 animate-pulse'
                 : 'bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800'
-            }`}
+              }`}
           >
             {isListening ? (
               <MicOff className="w-5 h-5 animate-bounce" />
@@ -615,11 +652,10 @@ export function ChatPage() {
             disabled={!inputQuery.trim() || isTyping}
             aria-label={t('chat.sendAria') || 'Send message'}
             title={t('chat.sendAria') || 'Send message'}
-            className={`p-3 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 ${
-              inputQuery.trim() && !isTyping
+            className={`p-3 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 ${inputQuery.trim() && !isTyping
                 ? 'bg-emerald-800 text-white shadow-md hover:bg-emerald-900 ring-2 ring-emerald-600/20'
                 : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-            }`}
+              }`}
           >
             <Send className="w-5 h-5" />
           </button>
